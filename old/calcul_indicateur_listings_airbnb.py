@@ -10,10 +10,8 @@ import geopandas as gpd
 
 # Ce script permet de traiter, de géolocaliser et de calculer les différents indicateurs sur les données AIRBNB provenant d'INSIDE AIRBNB...
 
-chemin_dossier = r'\\Domapur.fr\zsf-apur\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB' # Chemin du dossier
 
-
-def traitement_reviews_data_airbnb_sig(chemin_dossier_reviews,chemin_dossier_listings,chemin_dossier_sortie,shapefile,nom_fichier_listings,nom_fichier_reviews):
+def traitement_reviews_data_airbnb_sig(chemin_dossier_listings,chemin_dossier_sortie,shapefile,nom_fichier_listings):
     
     liste_fichier = os.listdir(chemin_dossier_listings)
     
@@ -25,12 +23,12 @@ def traitement_reviews_data_airbnb_sig(chemin_dossier_reviews,chemin_dossier_lis
             
             print(fichier)
             read_data_airbnb = pd.read_csv(chemin_dossier_listings+"\\"+ fichier,sep=';')
-            data_airbnb = read_data_airbnb[['id','latitude','longitude','ville']]
+            data_airbnb = read_data_airbnb[['id','latitude','longitude','ville','date_tele']]
             
             data_airbnb_sig.append(data_airbnb)
             
     data_airbnb_sig_concat = pd.concat(data_airbnb_sig)
-    data_airbnb_sig_concat_groupby = data_airbnb_sig_concat.groupby(['id','latitude','longitude']).count()
+    data_airbnb_sig_concat_groupby = data_airbnb_sig_concat.groupby(['id','latitude','longitude','date_tele']).count()
     data_airbnb_sig_concat_groupby_reset = data_airbnb_sig_concat_groupby.reset_index()
             
     ville_shape = gpd.read_file(shapefile) # lecture du shapefile 
@@ -38,8 +36,8 @@ def traitement_reviews_data_airbnb_sig(chemin_dossier_reviews,chemin_dossier_lis
     points_gdf = gpd.GeoDataFrame(data_airbnb_sig_concat_groupby_reset, geometry=gpd.points_from_xy(data_airbnb_sig_concat_groupby_reset.longitude, data_airbnb_sig_concat_groupby_reset.latitude),crs=4326) # WGS84
     points_gdf = points_gdf.to_crs(2154) # RGF_1993
     
-    intersect_shape= gpd.sjoin(points_gdf, ville_shape[[champ_shape, 'geometry']], how='left', predicate='intersects') # l_ar pour les arrondissements à modifier pour les autres villes
-    intersect_in_shape = intersect_shape[(intersect_shape[champ_shape].notnull())] 
+    intersect_shape= gpd.sjoin(points_gdf, ville_shape[[champ_shape, 'geometry']], how='left', predicate='intersects') 
+    intersect_in_shape = intersect_shape[(intersect_shape[champ_shape].notnull())] # tous les arrondissements à modifier pour les autres villes
     print(intersect_in_shape)
         
     fig,ax = plt.subplots(figsize=(10,10))
@@ -70,8 +68,8 @@ def traitement_reviews_data_airbnb_sig(chemin_dossier_reviews,chemin_dossier_lis
                 data_airbnb_temp['date_tele'] = pd.to_datetime(data_airbnb_temp['date_tele'])
                 data_airbnb_temp['last_scraped'] = pd.to_datetime(data_airbnb_temp['last_scraped'])
                 data_airbnb_temp['price'] = data_airbnb_temp['price'].astype(str)
-                data_airbnb_temp['price'] = data_airbnb_temp['price'].str.replace('$','',regex=True)
-                data_airbnb_temp['price'] = data_airbnb_temp['price'].str.replace(',','',regex=True)
+                data_airbnb_temp['price'] = data_airbnb_temp['price'].str.replace('$','')
+                data_airbnb_temp['price'] = data_airbnb_temp['price'].str.replace(',','')
                 data_airbnb_temp['price'] = data_airbnb_temp['price'].astype(float) 
            
                 c = CurrencyRates()
@@ -136,10 +134,10 @@ def traitement_reviews_data_airbnb_sig(chemin_dossier_reviews,chemin_dossier_lis
                 
                 if 'paris' in data_airbnb_logement_entier.values:
                     
-                    data_airbnb_license = data_airbnb_logement_entier[['license']]
+                    data_airbnb_license = data_airbnb_logement_entier[['license']].astype(str)
                     
                     data_airbnb_avec_licence_valide = data_airbnb_license['license'].str.startswith('75', na = False)
-                    data_airbnb_avec_licence_mobilite = data_airbnb_license['license'].str.contains('mobility', na = False)
+                    data_airbnb_avec_licence_mobilite = data_airbnb_license['license'].str.contains('mobi', na = False)
                     data_airbnb_avec_licence_hotel = data_airbnb_license['license'].str.contains('Exempt', na = False)
                     data_airbnb_avec_licence_vide = data_airbnb_license['license'].isna()
                     
@@ -182,18 +180,38 @@ def traitement_reviews_data_airbnb_sig(chemin_dossier_reviews,chemin_dossier_lis
                 count_data_airbnb_type_logement = data_airbnb_type_logement.groupby(by='room_type').count()
                 count_data_airbnb_type_logement = count_data_airbnb_type_logement.reset_index()
                 count_data_airbnb_type_logement.rename({'id':'nombre','room_type':'type_logement'},axis=1, inplace=True)
+                print(count_data_airbnb_type_logement)
+                
+                condition = count_data_airbnb_type_logement['type_logement'].str.contains('Hotel room', case=False)
 
-                hotel = count_data_airbnb_type_logement[(count_data_airbnb_type_logement['type_logement'] =='Hotel room')]
-                logement_entier = count_data_airbnb_type_logement[(count_data_airbnb_type_logement['type_logement'] =='Entire home/apt')]
-                logement_entier = logement_entier['nombre'][0]
+                if any(condition):
+                    hotel = count_data_airbnb_type_logement.loc[count_data_airbnb_type_logement['type_logement'] =='Hotel room', 'nombre'].values[0]
+                else:
+                    
+                    new_data = {'nombre': 0, 'type_logement': 'Hotel room'}
+                    new_data = pd.DataFrame([new_data])
+                    count_data_airbnb_type_logement = pd.concat([count_data_airbnb_type_logement, new_data], ignore_index=True)
+                    hotel = 0
+                
+                print(hotel)
+                
+                logement_entier = count_data_airbnb_type_logement.loc[count_data_airbnb_type_logement['type_logement'] =='Entire home/apt', 'nombre'].values[0]
+            
+                chambre_privee = count_data_airbnb_type_logement.loc[count_data_airbnb_type_logement['type_logement'] =='Private room', 'nombre'].values[0]
 
-                chambre_privee = count_data_airbnb_type_logement[(count_data_airbnb_type_logement['type_logement'] =='Private room')]
-                chambre_privee = chambre_privee['nombre'][2]
 
-                chambre_partagee = count_data_airbnb_type_logement[(count_data_airbnb_type_logement['type_logement'] =='Shared room')]
-                chambre_partagee = chambre_partagee['nombre'][3]
+                condition = count_data_airbnb_type_logement['type_logement'].str.contains('Shared room', case=False)
 
-                base_count = count_data_airbnb_type_logement['nombre'].sum()-hotel['nombre'][1]
+                if any(condition):
+                    chambre_partagee = count_data_airbnb_type_logement.loc[count_data_airbnb_type_logement['type_logement'] =='Shared room', 'nombre'].values[0]
+                else:
+                    
+                    new_data = {'nombre': 0, 'type_logement': 'Shared room'}
+                    new_data = pd.DataFrame([new_data])
+                    count_data_airbnb_type_logement = pd.concat([count_data_airbnb_type_logement, new_data], ignore_index=True)
+                    chambre_partagee = 0
+             
+                base_count = count_data_airbnb_type_logement['nombre'].sum()-hotel
                 part_logement_entier = (logement_entier)/base_count*100
 
                 nbre_logement_entier = len(data_airbnb_temp)
@@ -280,7 +298,7 @@ def traitement_reviews_data_airbnb_sig(chemin_dossier_reviews,chemin_dossier_lis
                 part_logement_entier_sup_100 = count_data_airbnb_price_100_plus_sum/count_data_airbnb_price_total*100
 
                 
-                table_data_airbnb = pd.DataFrame(columns=['ville','date','nombres_annonces','nbres_logements_entiers',
+                table_data_airbnb = pd.DataFrame(columns=['ville','date','nombres_annonces','nbres_chambres_hotels','nombres_annonces_hors_hotels','nbres_logements_entiers',
                                                 'nbres_chambres_privees','nbres_chambres_partagees',
                                                 'part_de_logements_entiers_(%)','nbres_annonces_dispo_log_365','nbres_annonces_dispo_sauf_hotel_365',
                                                 'annonces_par_loueur_(1)','annonces_par_loueur_(2_a_9)','annonces_par_loueur_(10_et_plus)',
@@ -299,6 +317,8 @@ def traitement_reviews_data_airbnb_sig(chemin_dossier_reviews,chemin_dossier_lis
                 table_data_airbnb['ville'] = [data_airbnb_temp['ville'].iloc[0]]
 
                 table_data_airbnb['nombres_annonces'] = [nbre_logement_entier]
+                table_data_airbnb['nbres_chambres_hotels'] = [hotel]
+                table_data_airbnb['nombres_annonces_hors_hotels'] = [nbre_logement_entier-hotel]
                 table_data_airbnb['nbres_logements_entiers'] = [logement_entier]
                 table_data_airbnb['nbres_chambres_privees'] = [chambre_privee]
                 table_data_airbnb['nbres_chambres_partagees'] = [chambre_partagee]
@@ -344,13 +364,12 @@ def traitement_reviews_data_airbnb_sig(chemin_dossier_reviews,chemin_dossier_lis
 
     data_airbnb_sig_concat.to_csv(chemin_dossier_sortie + nom_export, index = False, sep=';')
 
-champ_shape = 'NAME' # boro_name # l_ar # nom # Stadsdeel # NOM # Gemeinde_n # NAME
-nom_export = '/OUTPUT/DATA_AIRBNB_LONDRES_INDICATEURS_SIG.csv'
-shapefile = r'P:\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB\shapefile_ville\londres.shp'
-nom_fichier_listings = "listings_londres" # début des noms des fichiers avec ville pour récupérer les coordonnées des annonces
-nom_fichier_reviews = "reviews_londres" # début des noms des fichiers avec ville pour les annonces
-chemin_dossier_reviews = r'\\Domapur.fr\zsf-apur\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB\REVIEWS_AIRBNB' # Chemin du dossier des commentaires
-chemin_dossier_listings = r'\\Domapur.fr\zsf-apur\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB\LISTINGS_AIRBNB' # Chemin du dossier des annonces avec localisation
-chemin_dossier_sortie = r'\\Domapur.fr\zsf-apur\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB' # Chemin du dossier de sortie
 
-traitement_reviews_data_airbnb_sig(chemin_dossier_reviews,chemin_dossier_listings,chemin_dossier_sortie,shapefile,nom_fichier_listings,nom_fichier_reviews)
+champ_shape = 'shape_Area' #'l_ar' # boro_name # l_ar # nom # Stadsdeel # NOM # Gemeinde_n # NAME
+nom_export = '/DATA_AIRBNB_IDF_INDICATEURS_SIG.csv'
+shapefile = r'P:\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB\shapefile_ville\idf.shp' # delimitation 
+nom_fichier_listings = "listings_idf" # début des noms des fichiers avec ville pour récupérer les coordonnées des annonces
+chemin_dossier_listings = r'\\Domapur.fr\zsf-apur\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB\new_data' # Chemin du dossier des annonces avec localisation
+chemin_dossier_sortie = r'\\Domapur.fr\zsf-apur\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB\new_output' # Chemin du dossier de sortie
+
+traitement_reviews_data_airbnb_sig(chemin_dossier_listings,chemin_dossier_sortie,shapefile,nom_fichier_listings)

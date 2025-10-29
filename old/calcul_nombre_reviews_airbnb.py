@@ -39,6 +39,9 @@ def traitement_data_airbnb_reviews_sig(chemin_dossier_reviews,chemin_dossier_lis
     print(points_gdf)
     intersect_shape= gpd.sjoin(points_gdf, ville_shape[['l_ar', 'geometry']], how='left', predicate='intersects') # l_ar pour les arrondissements à modifier pour les autres villes
     intersect_in_shape = intersect_shape[(intersect_shape['l_ar'].notnull())]
+    
+    # intersect_in_shape = intersect_shape[(intersect_shape['l_ar']=='9e')] # arrondissements à modifier pour les autres ville
+    
     print(intersect_in_shape)
         
     fig,ax = plt.subplots(figsize=(10,10))
@@ -99,14 +102,14 @@ def traitement_data_airbnb_reviews_sig(chemin_dossier_reviews,chemin_dossier_lis
     data_airbnb_reviews_concat_sel_groupby_count_sort.to_csv(chemin_dossier_sortie + nom_export,index = True, sep=';')     
 
 
-annee = [2021, 2022 ,2023]
+annee = [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024]
 
 
 
 for i in annee:
     
     print("Traitement de 2015 à 2018, actuellement en cour",i)
-    nom_export = '/OUTPUT/NBRES_COMMENTAIRES_SIG_PARIS_{}.csv'.format(i)
+    nom_export = '/new_output/NBRES_COMMENTAIRES_SIG_PARIS_{}.csv'.format(i)
     shapefile = r'\\zsfa\ZSF-APUR\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB\shapefile_ville\paris.shp'
     nom_fichier_listings = "listings_paris_{}".format(i) # début des noms des fichiers avec ville pour récupérer les coordonnées des annonces
     nom_fichier_reviews = "reviews_paris_{}".format(i) # début des noms des fichiers avec ville pour les annonces
@@ -118,13 +121,13 @@ for i in annee:
 
 
 
-chemin_dossier_sortie_data = r'\\Domapur.fr\zsf-apur\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB\OUTPUT'
+chemin_dossier_sortie_data = r'\\Domapur.fr\zsf-apur\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB\new_output'
 liste_fichier_data= os.listdir(chemin_dossier_sortie_data)
 
 data_airbnb_traite = []
 
 for fichier in liste_fichier_data:  # Lire et stocker les fichiers *.csv dans une seule fichier
-    if fichier.startswith("NBRES_COMMENTAIRES_SIG_PARIS"):
+    if fichier.startswith("NBRES_COMMENTAIRES_SIG_PARIS_"):
         
         lire_data_airbnb = pd.read_csv(chemin_dossier_sortie_data + "\\" + fichier,sep=';',engine='python')
         data_airbnb = lire_data_airbnb[['listing_id','id','date','mois','annee']]
@@ -139,4 +142,4 @@ data_airbnb_traite_concat_groupby = data_airbnb_traite_concat_groupby.reset_inde
 data_airbnb_traite_concat_groupby_sort = data_airbnb_traite_concat_groupby.sort_values(by=['annee', 'mois'])
 data_airbnb_traite_concat_groupby_sort = data_airbnb_traite_concat_groupby_sort[['mois','annee','listing_id']]
 data_airbnb_traite_concat_groupby_sort.rename({'listing_id':'nbres_commentaires'},axis=1, inplace=True)
-data_airbnb_traite_concat_groupby_sort.to_csv(chemin_dossier_sortie_data + "/DATA_AIRBNB_NBRES_COMMENTAIRES_SIG_PARIS_2015_2023_SANS_HOTEL.csv",index = True, sep=';') 
+data_airbnb_traite_concat_groupby_sort.to_csv(chemin_dossier_sortie_data + "/DATA_AIRBNB_NBRES_COMMENTAIRES_SIG_PARIS_2015_2024_SANS_HOTEL.csv",index = True, sep=';') 

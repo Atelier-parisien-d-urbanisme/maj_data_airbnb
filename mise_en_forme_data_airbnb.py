@@ -3,39 +3,58 @@
 import pandas as pd
 import os
 
-# Ce script permet de mettre en forme les données AIRBNB provenant d'INSIDE AIRBNB...
+# Ce script permet de mettre en forme les données AIRBNB IDF provenant d'INSIDE AIRBNB...
+# Le script lit les fichiers en format *.csv nommer sous la forme type_ville_année_mois_jours... 
 
-chemin_dossier = r'\\Domapur.fr\zsf-apur\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB' # Chemin du dossier
+# ----------------------------------------------------
+# 🔧 Fonction de traitement des données
+# ----------------------------------------------------
 
-def mise_en_forme_listings_data_airbnb(chemin_dossier_traitement):
-    
+def mise_en_forme_listings_data_airbnb(chemin_dossier_traitement, type_fichier):
+
     liste_fichier = os.listdir(chemin_dossier_traitement)
+    print("Fichiers trouvés :", liste_fichier)
     
     for fichier in liste_fichier:
-        
-        print("Mise en forme de {}...".format(fichier))
-        
-        nom = fichier.replace('reviews_','')
-        nom = nom.replace('.csv','')
-        nom = nom.replace('_',',')
-        nom_split = nom.split(',')
+
+        if fichier.startswith(type_fichier) and fichier.endswith(".csv"):
+
+            print(f"Mise en forme de {fichier}...")
+
+            # Nettoyage du nom
+            nom = fichier.replace(type_fichier, '').replace('.csv', '')
+            nom_split = nom.split('_')
+
+            # On suppose que les 3 derniers sont AAAA, MM, JJ
+            v = "_".join(nom_split[:-3])   # la ville peut contenir des "_"
+            a, m, j = nom_split[-3:]
+
+            # Chemin d’entrée
+            fichier_entree = os.path.join(chemin_dossier_traitement, fichier)
+            
+            # Lecture CSV
+            data_airbnb_temp = pd.read_csv(fichier_entree, sep=',')
+            
+            # Ajout colonnes
+            data_airbnb_temp['ville'] = v
+            data_airbnb_temp['date_tele'] = pd.to_datetime(f"{a}-{m}-{j}")
+            
+            print(data_airbnb_temp.head())  # aperçu seulement
+            
+            # Réécriture en CSV (avec ; si besoin)
+            fichier_sortie = fichier_entree  # ou un autre nom si tu veux garder l’original
+            data_airbnb_temp.to_csv(fichier_sortie, index=False, sep=';')
     
-        v = nom_split[0]
-        a = nom_split[1]
-        m = nom_split[2]
-        j = nom_split[3]
+    print("✅ Mise en forme data Inside AirBnb terminée.")
 
-        fichier_entree = chemin_dossier_traitement + "\\" + "{}".format(fichier)
-        
-        data_airbnb_temp = pd.read_csv(fichier_entree)
-        data_airbnb_temp['ville'] = '{}'.format(v)
-        data_airbnb_temp['date_tele'] = '{}-{}-{}'.format(a,m,j)
-        data_airbnb_temp['date_tele'] = pd.to_datetime(data_airbnb_temp['date_tele'])
-        print(data_airbnb_temp)
-        data_airbnb_temp.to_csv(fichier_entree,index = True, sep=';')
-    
-    print("Mise en forme data Inside AirBnb terminée...")
+# ----------------------------------------------------
+# 🔧 Boucle de traitement des données d'Inside Airbnb
+# ----------------------------------------------------
 
-chemin_dossier_traitement = r'P:\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\2022-2023_Données\INSIDE_AIRBNB\traitement'  # Chemin du dossier avec les fichiers à traiter            
+liste_type_fichier = ['reviews_','listings_']
 
-mise_en_forme_listings_data_airbnb(chemin_dossier_traitement)
+for i in liste_type_fichier:
+
+    type_fichier = i
+    chemin_dossier_traitement = r'P:\PROJETS\LOCATIONS_MEUBLEES_TOURISTIQUES\003_Données\INSIDE_AIRBNB\traitement'
+    mise_en_forme_listings_data_airbnb(chemin_dossier_traitement, type_fichier)
