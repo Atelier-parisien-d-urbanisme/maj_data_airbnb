@@ -7,9 +7,10 @@ Enfin, main_indicateurs_airbnb.py centralise les fonctions dans listings_indicat
 
 Ce projet constitue ainsi un outil complet pour l’analyse de données d'Inside Airbnb, de l’extraction initiale jusqu’à la génération d’indicateurs fiables.
 
-╔══════════════════════════════════════════════╗
-║      Dictionnaire des variables Airbnb       ║
-╚══════════════════════════════════════════════╝
+═════════════════════════════════════════════
+      Dictionnaire des variables Airbnb       
+═════════════════════════════════════════════
+
 ville : Nom de la ville concernée
 date : Date du nom du fichier (+/- date du scrapping)
 nombres_annonces : Nombre total d'annonces scrapées
