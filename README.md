@@ -11,12 +11,16 @@ Ce projet constitue ainsi un outil complet pour l’analyse de données d'Inside
 
 Dictionnaire des variables Airbnb       
 
-
 ville : Nom de la ville concernée
+
 date : Date du nom du fichier (+/- date du scrapping)
+
 nombres_annonces : Nombre total d'annonces scrapées
+
 nbres_chambres_hotels : Nombre d'annonces de chambres d'hôtel
+
 nombres_annonces_hors_hotels : Nombre d'annonces, hors chambres d'hôtel
+
 nbres_logements_entiers : Nombre d'annonces de logements entiers
 nbres_chambres_privees : Nombre d'annonces de chambres privées
 nbres_chambres_partagees : Nombre d'annonces de chambres partagées
