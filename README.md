@@ -1,13 +1,17 @@
 Ce projet vise à centraliser, préparer et analyser les données Airbnb afin de faciliter la compréhension des tendances du marché et d’optimiser la prise de décision. 
 Il est composé de plusieurs scripts Python, chacun dédié à une étape précise du traitement des données : extraction, nettoyage, mise en forme et calcul d’indicateurs.
 
-Le script exctraction_data_inside_airbnb.py permet de collecter les données brutes sur le site d'Inside Airbnb, tandis que preparation_data_airbnb.py et mise_en_forme_data_airbnb.py assurent la transformation et la normalisation des données. 
-Les scripts listings_indicateurs_airbnb.py et reviews_indicateurs_airbnb.py génèrent des métriques détaillées sur les annonces et les commentaires, donnant un aperçu précis des performances des listings. 
-Enfin, main_indicateurs_airbnb.py centralise les fonctions dans listings_indicateurs_airbnb.py pour produire un jeu de données final exploitable avec plusieurs indicateurs.
+Ce projet contient six scripts python :
+1) exctraction_data_inside_airbnb.py : 📥 Collecte les données brutes depuis le site d’Inside Airbnb.
+2) mise_en_forme_data_airbnb.py : 🧹 Assurent la transformation et la normalisation des données.
+3) preparation_data_airbnb.py : 🧹 Assurent la transformation et la normalisation des données.
+4) main_indicateurs_airbnb.py : 🔄 Centralise les fonctions de listings_indicateurs_airbnb.py pour produire un jeu de données final exploitable avec plusieurs indicateurs.
+5) listings_indicateurs_airbnb.py : 🧠 Contient les fonctions de traitements des métriques détaillées sur les annonces offrant une vision précise des performances des listings.
+6) reviews_indicateurs_airbnb.py  : 🧠 Génèrent des métriques détaillées sur les commentaires.
 
-Ce projet constitue ainsi un outil complet pour l’analyse de données d'Inside Airbnb, de l’extraction initiale jusqu’à la génération d’indicateurs fiables.
+Ce projet constitue ainsi un outil complet pour l’analyse des données d’Inside Airbnb, de l’extraction initiale à la génération d’indicateurs fiables.
 
-Dictionnaire des variables Airbnb:
+🎯 Dictionnaire des variables Airbnb:
  - ville : Nom de la ville concernée
  - date : Date du nom du fichier (+/- date du scrapping)
  - nombres_annonces : Nombre total d'annonces scrapées
