@@ -6,7 +6,7 @@ Il est composé de plusieurs scripts Python, chacun dédié à une étape préci
 Ce projet contient six scripts python :
 1) exctraction_data_inside_airbnb.py : 📥 Collecte les données brutes depuis le site d’Inside Airbnb (données Parisienne).
 2) mise_en_forme_data_airbnb.py : 🗂️ Assurent la transformation et la normalisation des données (données Parisienne).
-3) preparation_data_airbnb.py : 🧹 Assurent la transformation et la normalisation des données (données Parisienne et IDF).
+3) preparation_data_airbnb.py : 🧹 Assurent la transformation et la normalisation des données, en remplaçant jusqu’en janvier 2025 les données du fichier listings (Ile-de-France) par les données du fichier listings (Paris), pour Paris uniquement. A compter de janvier 2025 ce remplacement n’est plus effectué.  
 4) main_indicateurs_airbnb.py : 🔄 Centralise les fonctions de listings_indicateurs_airbnb.py pour produire un jeu de données final exploitable avec plusieurs indicateurs.
 5) listings_indicateurs_airbnb.py : 🧠 Contient les fonctions de traitements des métriques détaillées sur les annonces offrant une vision précise des performances des listings.
 6) reviews_indicateurs_airbnb.py  : 📊 Génèrent des métriques détaillées sur les commentaires.
